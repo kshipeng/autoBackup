@@ -1,5 +1,17 @@
 #!/bin/bash
 
+#########################################
+#1、下载脚本：
+#curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackup.sh -o autoBackup.sh && chmod +x autoBackup.sh && vim ./autoBackup.sh
+#2、按i
+#填入必须变量的值
+#按esc后输入(冒号):wq
+#3、手动执行一次看有没有错误
+#./autoBackup.sh
+#4、定时任务仅在第一次设置时有效。以后要更改，直接编辑crontab，命令：crontab -e
+#5、重新下载脚本后需重新配置
+#########################################
+
 #（必须）需要备份的目录绝对路径
 need_backup_path=''
 #（可选）备份文件前缀
@@ -13,9 +25,9 @@ git_user_email=''
 git_url=''
 
 #（可选）删除过期备份压缩文件（单位分钟，默认180）
-exp_time=1
-#（可选）定时任务cron（默认每小时备份一次）
-cron='* */1 * * *'
+exp_time=180
+#（可选）定时任务cron（默认每2小时备份一次）
+cron='* */2 * * *'
 
 if [ -z "$need_backup_path" -o -z "$need_backup_path" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
 	echo "！！！【出错啦：】须编辑脚本配置必须的变量。"
