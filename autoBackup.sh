@@ -27,7 +27,7 @@ git_url=''
 #（可选）删除过期备份压缩文件（单位分钟，默认180）
 exp_time=180
 #（可选）定时任务cron（默认每2小时备份一次）
-cron='* */2 * * *'
+cron='0 */2 * * *'
 
 if [ -z "$need_backup_path" -o -z "$need_backup_path" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
 	echo "！！！【出错啦：】须编辑脚本配置必须的变量。"
