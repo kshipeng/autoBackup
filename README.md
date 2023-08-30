@@ -5,9 +5,9 @@
 ```
 curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackup.sh -o autoBackup.sh && chmod +x autoBackup.sh && vim ./autoBackup.sh
 ```
-2、按i后填入必须变量的值
+2、按i进入编辑模式，填入必须变量的值
 
-3、完成后按esc后输入(冒号):wq
+3、完成后按esc输入(冒号):wq
 
 4、手动执行一次看有没有错误
 ```
