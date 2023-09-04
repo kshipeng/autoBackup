@@ -20,7 +20,7 @@ curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.
 ./autoBackupV2.sh -h
 ```
 # autoBackup
-自动备份
+文件定时备份
 
 1、下载脚本：
 ```
