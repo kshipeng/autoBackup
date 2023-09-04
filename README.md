@@ -19,6 +19,12 @@ curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.
 ```
 ./autoBackupV2.sh -h
 ```
+**配置完成后手动运行一次脚本看有没有报错**
+备份类型1:```./autoBackupV2.sh -r 1```
+
+备份类型2:```./autoBackupV2.sh -r 2```
+
+备份类型3:```./autoBackupV2.sh -r 3```
 # autoBackup
 文件定时备份
 
