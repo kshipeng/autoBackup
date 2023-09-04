@@ -1,3 +1,24 @@
+# autoBackupV2
+**文件、数据库定时备份。TG消息通知**
+## 注意事项
+1、数据库备份时会锁表，建议在凌晨用户少时进行。
+
+2、删除过期文件时会删除仓库中以```F.tar.gz或F.des3或D.sql.tar.gz或D.sql.des3```结尾的文件
+
+4、备份类型为3时，可分别设置的参数，某项可为空例如：```|passwd或|passwd```
+## 使用
+1、下载脚本
+```
+curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh' -o autoBackupV2.sh && chmod +x autoBackupV2.sh
+```
+2、配置
+```
+./autoBackupV2.sh -c
+```
+3、帮助信息
+```
+./autoBackupV2.sh -h
+```
 # autoBackup
 自动备份
 
