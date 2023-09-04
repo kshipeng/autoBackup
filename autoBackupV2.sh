@@ -339,8 +339,8 @@ RunFileBackup(){
 		gitPath="${fileDir}/${resName}"
 	fi
 	
-	if [ ! -d "${gitPath}" ]; then cd "${fileDir}" && git clone "$backupGit"; fi
-	[ -d "${gitPath}" ] || `notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在\n"; return -1;`
+	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$backupGit";
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在\n" && return -1
 	cd `dirname $need_backup_path`
 
 	file_prefix="$(GetParam "${back_file_prefix}" '1')"
@@ -354,13 +354,13 @@ RunFileBackup(){
 	if [[ -n $tar_passwd ]]; then
 		ColorStr '已设置压缩密码' pink
 		back_file_name="${back_file_name_p}.${file_extension2}"
-		tar --force-local -czvf - `basename $need_backup_path` | openssl des3 -salt -k "${tar_passwd}" 2>/dev/null | dd of="${back_file_name}"
+		tar --force-local -czf - `basename $need_backup_path` | openssl des3 -salt -k "${tar_passwd}" 2>/dev/null | dd of="${back_file_name}"
 	else
 		back_file_name="${back_file_name_p}.${file_extension1}"
-		tar --force-local -czvf "${back_file_name}" `basename $need_backup_path`
+		tar --force-local -czf "${back_file_name}" `basename $need_backup_path`
 	fi
 	
-	mv "${back_file_name}" "${gitPath}"
+	mv "${back_file_name}" "${gitPath}/${back_file_name}"
 	ColorStr "***【压缩完成】***" green
 	ColorStr "GitHub仓库路径:${gitPath}" pink
 	cd "${gitPath}"
@@ -416,12 +416,10 @@ RunDBBackup(){
 		gitPath="${fileDir}/${resName}"
 	fi
 	
-	if [ ! -d "${gitPath}" ]; then
-		cd "${fileDir}" && git clone "$dbBackupGit"
-	fi
-
+	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$dbBackupGit"
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在\n" && return -1
 	ColorStr "GitHub仓库路径:${gitPath}" pink
-	cd "${gitPath}" || `notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在\n"; return -1;`
+	cd "${gitPath}"
 	IFS_OLD=$IFS; IFS=$'|'; dbNameArray=(${db_name}); IFS=${IFS_OLD};
 	file_prefix=$(GetParam "${back_file_prefix}" '2')
 	tar_passwd=$(GetParam "${tarPasswd}" '2')
@@ -436,11 +434,11 @@ RunDBBackup(){
 		if [[ -n $tar_passwd ]]; then
 			ColorStr '已设置压缩密码' pink
 			sql_back_file_name="${sql_file_name}.des3"
-			tar --force-local -czvf - "${sql_file_name}" | openssl des3 -salt -k "${tar_passwd}" 2>/dev/null | dd of="${sql_back_file_name}"
+			tar --force-local -czf - "${sql_file_name}" | openssl des3 -salt -k "${tar_passwd}" 2>/dev/null | dd of="${sql_back_file_name}"
 			rm -rf "${sql_file_name}"
 		else
 			sql_back_file_name="${sql_file_name}.tar.gz"
-			tar --force-local -czvf "${sql_file_name}" "${sql_back_file_name}"
+			tar --force-local -czf "${sql_file_name}" "${sql_back_file_name}"
 		fi
 	done
 	
