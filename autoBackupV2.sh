@@ -19,6 +19,7 @@
 ###   -S|--stop                停止备份(删除定时任务)
 ###
 ###   -t|--type 1或2           备份类型(默认1), 1: 目录, 2: 数据库, 3: 同时配置.
+###   -m|--remark 'remark'     备注信息
 ###   -i|--input '/xxx/xxx'    需要备份的目录绝对路径(类型1时必选).
 ###   -x|--prefix 'xxx'        备份文件前缀(可选)(类型3时可分别设置: '目录类型｜数据库类型').
 ###   -n|--name 'xxx'          GitHub用户名.
@@ -31,7 +32,7 @@
 ###   -H|--host 'address'      数据库主机(默认127.0.0.1).
 ###   -d|--expired 'name'      过期时间(单位分钟).(类型3时可分别设置: '目录类型｜数据库类型').
 ###   -A|--tarPasswd ''        压缩文件密码.(类型3时可分别设置: '目录类型｜数据库类型').
-###   -C|--cron '0 */2 * * *'  cron表达式(可选)(默认为0 */2 * * *)(类型3时可分别设置: ‘目录类型｜数据库类型').
+###   -C|--cron '0 */2 * * *'  cron表达式(可选)(默认为0 */2 * * *)(类型3时可分别设置: '目录类型｜数据库类型').
 ### ===================================================================
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -526,7 +527,7 @@ Run(){
 	fi 
 }
 
-ARGS=$(getopt -o 'hr:csDUSt:i:x:u:p:P:N:H:A:C:d:n:e:l:' -l 'help,run:,config,show,update,uninstall,stop,type:,input:,prefix:,user:,passwd:,port:,dbbName:,host:,tarPasswd:,cron:,expired:,name:,email:,url:' -n "$0" -- "$@")
+ARGS=$(getopt -o 'hr:csDUSt:i:x:u:p:P:N:H:A:C:d:n:e:l:m:' -l 'help,run:,config,show,update,uninstall,stop,type:,input:,prefix:,user:,passwd:,port:,dbbName:,host:,tarPasswd:,cron:,expired:,name:,email:,url:,remark:' -n "$0" -- "$@")
 if [ $? != 0 ] ; then ColorStr "参数错误! Terminating..." red >&2 ; exit 1 ; fi
 #将规范化后的命令行参数分配至位置参数（$1,$2,...)
 eval set -- "${ARGS}"
@@ -552,6 +553,7 @@ while true ; do
 			shift ;;
 		#需要带参数值，所以通过 $2 取得参数值，获取后通过 shift 清理已获取的参数
         -t|--type) backup_type="$2" ; WriteConfig 'backup_type' "${backup_type}" 'updateCron' ; shift 2 ;;
+		-m|--remark) remark="$2" ; WriteConfig 'remark' "${remark}" ; shift 2 ;;
         -i|--input) need_backup_path="$2" ; WriteConfig 'need_backup_path' "${need_backup_path}" ; shift 2 ;;
 		-x|--prefix) back_file_prefix="$2" ; WriteConfig 'back_file_prefix' "${back_file_prefix}" ; shift 2 ;;
 		-n|--name) git_user_name="$2" ; WriteConfig 'git_user_name' "${git_user_name}" ; shift 2 ;;
