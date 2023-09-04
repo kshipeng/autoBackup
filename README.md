@@ -9,7 +9,7 @@
 ## 使用
 1、下载脚本
 ```
-curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh' -o autoBackupV2.sh && chmod +x autoBackupV2.sh
+curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh -o autoBackupV2.sh && chmod +x autoBackupV2.sh
 ```
 2、配置
 ```
