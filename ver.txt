@@ -1,2 +1,2 @@
 ver=2.0.1
-infor=null
+infor=
