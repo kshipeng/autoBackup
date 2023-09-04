@@ -28,7 +28,7 @@ curl -L https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.
 备份类型3:```./autoBackupV2.sh -r 3```
 
 报错大多是git仓库没配置好
-# autoBackup
+# autoBackup（不再更新）
 文件定时备份
 
 1、下载脚本：
