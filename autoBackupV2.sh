@@ -340,7 +340,7 @@ RunFileBackup(){
 	fi
 	
 	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$backupGit";
-	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在\n" && return -1
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在\n" && return 1
 	cd `dirname $need_backup_path`
 
 	file_prefix="$(GetParam "${back_file_prefix}" '1')"
@@ -383,16 +383,14 @@ RunFileBackup(){
 	  	git commit -am "自动备份：${currentTime}"
 	  	ColorStr ">>>【开始推送到GitHub】..." green
 	  	git push
+	else
+		notifyMsg="${notifyMsg}🟡目录文件备份:git没有变更的数据\n" && return 0
 	fi
 
 	if [[ -z `git status -s` ]]; then
-		ColorStr "***【目录文件备份成功】***" green
-	  	echo ''
 	  	notifyMsg="${notifyMsg}🟢目录文件备份成功\n"
 	 else
-	 	ColorStr "***【目录文件备份失败】***" red
-	 	echo ''r
-	 	notifyMsg="${notifyMsg}🔴目录文件备份失败\n"
+	 	notifyMsg="${notifyMsg}🔴目录文件备份失败:git push失败\n"
 	fi
 }
 
@@ -417,7 +415,9 @@ RunDBBackup(){
 	fi
 	
 	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$dbBackupGit"
-	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在\n" && return -1
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在\n" && return 1
+	mysqlStatus=`mysqladmin -u "${db_user}" -p"${db_passwd}" -h "${db_host}" -P "${db_port}" ping`
+	[[ "$mysqlStatus" != 'mysqld is alive' ]] && notifyMsg="${notifyMsg}🔴数据库备份失败:无法连接数据库\n" && return 1
 	ColorStr "GitHub仓库路径:${gitPath}" pink
 	cd "${gitPath}"
 	IFS_OLD=$IFS; IFS=$'|'; dbNameArray=(${db_name}); IFS=${IFS_OLD};
@@ -458,25 +458,28 @@ RunDBBackup(){
 		git add .
 	  	git commit -am "自动备份：${currentTime}"
 	  	ColorStr ">>>【开始推送到GitHub】..." green
-	  	git push
+	  	git push 
+	 else
+	 	notifyMsg="${notifyMsg}🟡数据库备份:git没有变更的数据\n" && return
 	fi
-
 	if [[ -z `git status -s` ]]; then
-		ColorStr "***【数据库备份成功】***" green
-	  	echo ''
 	  	notifyMsg="${notifyMsg}🟢数据库备份成功\n"
 	 else
-	 	notifyMsg="${notifyMsg}🔴数据库备份失败\n"
+	 	notifyMsg="${notifyMsg}🔴数据库备份失败:git push失败\n"
 	fi
 }
 
 CheckVer(){
 	verInfor=`curl -L -s 'https://raw.githubusercontent.com/kshipeng/autoBackup/main/ver.txt'`
-	ver=`echo "${verInfor}" | sed -e 's/^ver=//' -e 's/^infor.*//'`
-	verMsg=`echo "${verInfor}"  | sed -e 's/^ver=.*$//' -e 's/^infor=//'`
-	[[ "${verMsg}" == '' ]] && verMsg=''
-	[[ "${ver}" > "${version}" ]] && verMsg="有新版本可用:${ver}${verMsg}"
-	echo "${verMsg}"
+	if [[ "${verInfor}" =~ 'ver=' && "${verInfor}" =~  'infor=' ]]; then
+		ver=`echo "${verInfor}" | sed -e 's/^ver=//' -e 's/^infor.*//'`
+		verMsg=`echo "${verInfor}"  | sed -e 's/^ver=.*$//' -e 's/^infor=//'`
+		[[ "${verMsg}" == '' ]] && verMsg=''
+		[[ "${ver}" > "${version}" ]] && verMsg="有新版本可用:${ver}${verMsg}"
+		echo "${verMsg}"
+	else
+		echo ''
+	fi
 }
 
 Run(){
@@ -506,7 +509,7 @@ Run(){
 		db_port=$(GetConfig 'read' "${sub_conf}" 'db_port')
 		db_host=$(GetConfig 'read' "${sub_conf}" 'db_host')
 
-		notifyMsg="${notifyMsg}\n【${sub_conf}: ${remark}】\n"
+		notifyMsg="${notifyMsg}\n 🔔【${sub_conf}: ${remark}】\n"
 
 		if [[ $backup_type = 1 || $backup_type = 3 ]] && [[ $1 = 1 ]]; then
 			RunFileBackup "${sub_conf}"
@@ -521,6 +524,7 @@ Run(){
 		fi
 	done
 	if [[ "${notifyMsg}" != '' ]]; then
+		echo -e "${notifyMsg}\n${updateMsg}"
 	 	SendNotify "${notifyMsg}\n${updateMsg}"
 	fi 
 }
@@ -576,7 +580,6 @@ done
 #    echo "processing $arg"
 #done
 	
-
 
 
 
