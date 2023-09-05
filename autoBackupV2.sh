@@ -321,10 +321,11 @@ RunFileBackup(){
 	
 	if [ -z "$need_backup_path" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
 		ColorStr "请先使用：$(ColorStr "./${fullname} -c" green)命令进行配置" red
-		exit 1
+		notifyMsg="${notifyMsg}🔴目录文件备份失败:参数未配置\n"
+		return 1
 	fi
 
-	if [[ ! -d $need_backup_path ]]; then ColorStr "待备份目录(${need_backup_path})不存在" red; notifyMsg="${notifyMsg}🔴目录文件备份失败:待备份目录(${need_backup_path})不存在\n"; return -1; fi
+	if [[ ! -d "$need_backup_path" && ! -f "$need_backup_path" ]]; then ColorStr "待备份目录(${need_backup_path})不存在" red; notifyMsg="${notifyMsg}🔴目录文件备份失败:待备份目录(${need_backup_path})不存在\n"; return -1; fi
 	ColorStr ">>>开始$1: $(GetConfig 'read' $1 'remark') , 文件备份" pink
 
 	backupGit="$(GetParam "${git_url}" '1')"
@@ -350,6 +351,7 @@ RunFileBackup(){
 	currentTime=$(TZ=UTC-8 date +%Y-%m-%d_%H:%M:%S)
 	back_file_name_p="${file_prefix}_${currentTime}"
 	file_extension1='F.tar.gz'; file_extension2='F.des3';
+	[[ -f "$need_backup_path" ]] && backFileBasename=`basename $need_backup_path` && file_extension1="${backFileBasename}.F.tar.gz" && file_extension2="${backFileBasename}.F.des3"
 	if [[ "${file_prefix}" == '' ]]; then back_file_name_p="${currentTime}"; fi
 	if [[ -n $tar_passwd ]]; then
 		ColorStr '已设置压缩密码' pink
@@ -398,7 +400,8 @@ RunDBBackup(){
 
 	if [ -z "$db_user" -o -z "$db_name" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
 		ColorStr "请先使用：$(ColorStr "./${fullname} -c" green)命令进行配置" red
-		exit 1
+		notifyMsg="${notifyMsg}🔴数据库备份失败:参数未配置\n"
+		return 1
 	fi
 	ColorStr ">>>开始$1: $(GetConfig 'read' $1 'remark') , 数据库备份" pink
 
@@ -520,7 +523,7 @@ Run(){
 			RunDBBackup "${sub_conf}"
 		else
 			ColorStr '错误的命令或备份类型' red
-			exit 1
+			notifyMsg="${notifyMsg}错误的命令或备份类型\n"
 		fi
 	done
 	if [[ "${notifyMsg}" != '' ]]; then
