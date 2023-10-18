@@ -341,7 +341,7 @@ RunFileBackup(){
 	fi
 	
 	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$backupGit";
-	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在\n" && return 1
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴目录文件备份失败:(${gitPath})不存在(git clone失败)\n" && return 1
 	cd `dirname $need_backup_path`
 
 	file_prefix="$(GetParam "${back_file_prefix}" '1')"
