@@ -418,7 +418,7 @@ RunDBBackup(){
 	fi
 	
 	[ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$dbBackupGit"
-	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在\n" && return 1
+	[ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库备份失败:(${gitPath})不存在(git clone失败)\n" && return 1
 	mysqlStatus=`mysqladmin -u "${db_user}" -p"${db_passwd}" -h "${db_host}" -P "${db_port}" ping`
 	[[ "$mysqlStatus" != 'mysqld is alive' ]] && notifyMsg="${notifyMsg}🔴数据库备份失败:无法连接数据库\n" && return 1
 	ColorStr "GitHub仓库路径:${gitPath}" pink
