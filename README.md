@@ -22,7 +22,7 @@
 vim /root/.autoBackupV2.conf  
 #添加一行配置
 #（可选）备份完清理Git提交记录,y:清理; n:不清理(类型3时可分别设置: ''目录类型｜数据库类型'')
-[clear_git]='"'${clear_git:=n}'"'
+[clear_git]='n'
 ```
 ## 使用
 1、下载脚本
