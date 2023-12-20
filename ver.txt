@@ -1,2 +1,2 @@
 ver=2.0.1
-infor=添加清理Git提交记录方法，防止git目录越来越大。注意：这会清除当前分支的提交记录！使用方法：1:./autoBackupV2.sh -s   2:编辑配置文件(第1步中有路径) vim /root/.autoBackupV2.conf   3:添加一行配置 [clear_git]='"'${clear_git:=n}'"'  项目地址：https://github.com/kshipeng/autoBackup
+infor=添加清理Git提交记录方法，防止git目录越来越大。注意：这会清除当前分支的提交记录！使用方法：1: ./autoBackupV2.sh -D   2:./autoBackupV2.sh -s   3:编辑配置文件(第1步中有路径) vim /root/.autoBackupV2.conf   4:添加一行配置 [clear_git]='"'${clear_git:=n}'"'  项目地址：https://github.com/kshipeng/autoBackup
