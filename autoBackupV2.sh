@@ -535,7 +535,6 @@ ResetGit() {
 }
 
 ClearGit() {
-    updateMsg=`CheckVer`
     if [ ! -f "${config_file}" ]; then
         ColorStr "请先使用：$(ColorStr "./${fullname} -c" green)命令进行配置" red
         exit 1
