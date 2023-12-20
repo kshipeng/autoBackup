@@ -484,8 +484,12 @@ CheckVer(){
         ver=`echo "${verInfor}" | sed -e 's/^ver=//' -e 's/^infor.*//'`
         verMsg=`echo "${verInfor}"  | sed -e 's/^ver=.*$//' -e 's/^infor=//'`
         [[ "${verMsg}" == '' ]] && verMsg=''
-        [[ "${ver}" > "${version}" ]] && verMsg="有新版本可用:${ver}${verMsg}"
-        echo "${verMsg}"
+        if dpkg --compare-versions "${ver}" gt "${version}"; then
+            verMsg="有新版本可用:${ver}${verMsg}"
+            echo "${verMsg}"
+        else
+            echo ''
+        fi
     else
         echo ''
     fi
