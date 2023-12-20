@@ -14,7 +14,10 @@
 
 使用方法：
 ```
-./autoBackupV2.sh -s  
+#更新脚本
+./autoBackupV2.sh -D
+#查看当前配置
+./autoBackupV2.sh -s
 #编辑配置文件(第1步中有路径)
 vim /root/.autoBackupV2.conf  
 #添加一行配置
