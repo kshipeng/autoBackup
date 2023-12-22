@@ -88,7 +88,7 @@ conf'"$1"'=(
 }
 
 shellURL='https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh'
-version='2.0.1'
+version='2.0.2'
 paramFromConf=true
 fullfile="$(pwd)/$(basename "$0")"
 fullname="${fullfile##*/}"
