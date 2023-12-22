@@ -323,6 +323,29 @@ SendNotify(){
     fi
 }
 
+delete_old_files() {
+    # 接受两个参数：目录路径和时间差（单位分钟）
+    local directory="$1"
+    local time_difference="$2"
+    # 当前时间戳
+    local current_time="$3"
+    # 遍历目录中的文件
+    for file in "$directory"/*; do
+        # 提取文件名中的时间部分
+        local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
+        # 将时间转换为时间戳
+        local file_time=$(date -d "$timestamp" +%s)
+        # 计算时间差（以秒为单位）
+        local time_difference_seconds=$((time_difference * 60))
+        local time_difference_result=$((current_time - file_time))
+        # 如果时间差大于指定时间差，删除文件
+        if [ "$time_difference_result" -gt "$time_difference_seconds" ]; then
+            rm "$file"
+            echo "已删除文件: $file"
+        fi
+    done
+}
+
 RunFileBackup(){
     
     if [ -z "$need_backup_path" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
@@ -354,7 +377,9 @@ RunFileBackup(){
     tar_passwd="$(GetParam "${tarPasswd}" '1')"
     
     ColorStr ">>>【正在压缩】`basename $need_backup_path` 请等待..." green
-    currentTime=$(TZ=UTC-8 date +%Y-%m-%d_%H:%M:%S)
+    export TZ=Asia/Shanghai
+    currentTime=$(date +%Y-%m-%d_%H:%M:%S)
+    currentTimestamp=$(date -u +%s)
     back_file_name_p="${file_prefix}_${currentTime}"
     file_extension1='F.tar.gz'; file_extension2='F.des3';
     [[ -f "$need_backup_path" ]] && backFileBasename=`basename $need_backup_path` && file_extension1="${backFileBasename}.F.tar.gz" && file_extension2="${backFileBasename}.F.des3"
@@ -376,11 +401,12 @@ RunFileBackup(){
     #删除过期文件
     ColorStr ">>>【清理过期文件】" green
     file_exp_time="$(GetParam "${exp_time}" '1')"
+    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp"
 
-    find "${gitPath}" -name "*.${file_extension1}" -mmin "+${file_exp_time}"
-    find "${gitPath}" -name "*.${file_extension2}" -mmin "+${file_exp_time}"
-    find "${gitPath}" -name "*.${file_extension1}" -mmin "+${file_exp_time}" -exec rm -rf {} \;
-    find "${gitPath}" -name "*.${file_extension2}" -mmin "+${file_exp_time}" -exec rm -rf {} \;
+#    find "${gitPath}" -name "*.${file_extension1}" -mmin "+${file_exp_time}"
+#    find "${gitPath}" -name "*.${file_extension2}" -mmin "+${file_exp_time}"
+#    find "${gitPath}" -name "*.${file_extension1}" -mmin "+${file_exp_time}" -exec rm -rf {} \;
+#    find "${gitPath}" -name "*.${file_extension2}" -mmin "+${file_exp_time}" -exec rm -rf {} \;
     ColorStr "***【清理完成】***" green
     #git
     git config user.name "${git_user_name}"
@@ -434,7 +460,9 @@ RunDBBackup(){
     tar_passwd=$(GetParam "${tarPasswd}" '2')
     for database in ${dbNameArray[@]}; do
         ColorStr ">>>开始备份数据库:${database}" green
-        currentTime=$(TZ=UTC-8 date +%Y-%m-%d_%H:%M:%S)
+        export TZ=Asia/Shanghai
+        currentTime=$(date +%Y-%m-%d_%H:%M:%S)
+        currentTimestamp=$(date -u +%s)
         sql_file_name="${file_prefix}_${database}_${currentTime}.D.sql"
         if [[ "${file_prefix}" == '' ]]; then
             sql_file_name="${database}_${currentTime}.D.sql"
@@ -454,10 +482,11 @@ RunDBBackup(){
     #删除过期文件
     ColorStr ">>>【清理过期文件】" green
     file_exp_time="$(GetParam "${exp_time}" '2')"
-    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}"
-    find "${gitPath}" -name "*.D.sql.des3" -mmin "+${file_exp_time}"
-    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}" -exec rm -rf {} \;
-    find "${gitPath}" -name "*.D.sql.des3" -mmin "+${file_exp_time}" -exec rm -rf {} \;
+    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp"
+#    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}"
+#    find "${gitPath}" -name "*.D.sql.des3" -mmin "+${file_exp_time}"
+#    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}" -exec rm -rf {} \;
+#    find "${gitPath}" -name "*.D.sql.des3" -mmin "+${file_exp_time}" -exec rm -rf {} \;
     ColorStr "***【清理完成】***" green
     #git
     git config user.name "${git_user_name}"
@@ -519,7 +548,7 @@ ResetGit() {
         if [ -n "$current_branch" ]; then
             # 切换到其他分支，以便删除当前分支
             git checkout --orphan AutoBackupClear # 你可以替换成其他分支名
-            git commit -m "AutoBackupAndClear"
+            git commit -m "自动备份并清理"
             # 删除当前分支
             #git branch -d "$current_branch"
             # 强制删除，如果分支有未合并的更改
@@ -530,7 +559,7 @@ ResetGit() {
             rm -rf "${gitPath}"
             [ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$backupGit";
             [ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴$2 ClearGit出错：clone出错\n" && return 1
-            notifyMsg="${notifyMsg}🟢$2 ClearGit清理完成。\n"
+            notifyMsg="${notifyMsg}🟢$2 清理完成。\n"
         else
             ColorStr "🔴$2 ClearGit出错：无法确定当前分支。" red
             notifyMsg="${notifyMsg}🔴$2 ClearGit出错：无法确定当前分支。\n"
@@ -557,7 +586,7 @@ ClearGit() {
         backupGit1="$(GetParam "${git_url}" 1)"
         backupGit2="$(GetParam "${git_url}" 2)"
         if [[ "$backupGit1" == "$backupGit2" ]]; then
-            ResetGit $backupGit1 '目录文件'
+            ResetGit $backupGit1 '目录文件和数据库'
         else
             ResetGit $backupGit1 '目录文件'
             ResetGit $backupGit2 '数据库'
@@ -671,8 +700,3 @@ done
 #    echo "processing $arg"
 #done
     
-
-
-
-
-
