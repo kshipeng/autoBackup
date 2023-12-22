@@ -331,17 +331,21 @@ delete_old_files() {
     local current_time="$3"
     # 遍历目录中的文件
     for file in "$directory"/*; do
-        # 提取文件名中的时间部分
-        local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
-        # 将时间转换为时间戳
-        local file_time=$(date -d "$timestamp" +%s)
-        # 计算时间差（以秒为单位）
-        local time_difference_seconds=$((time_difference * 60))
-        local time_difference_result=$((current_time - file_time))
-        # 如果时间差大于指定时间差，删除文件
-        if [ "$time_difference_result" -gt "$time_difference_seconds" ]; then
-            rm "$file"
-            echo "已删除文件: $file"
+        # 检查文件名是否以指定后缀结尾
+        if [[ "$file" =~ \.(F\.tar\.gz|F\.des3|D\.sql\.tar\.gz|D\.sql\.des3)$ ]]; then
+            echo "$file"
+            # 提取文件名中的时间部分
+            local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
+            # 将时间转换为时间戳
+            local file_time=$(date -d "$timestamp" +%s)
+            # 计算时间差（以秒为单位）
+            local time_difference_seconds=$((time_difference * 60))
+            local time_difference_result=$((current_time - file_time))
+            # 如果时间差大于指定时间差，删除文件
+            if [ "$time_difference_result" -gt "$time_difference_seconds" ]; then
+                rm "$file"
+                echo "已删除文件: $file"
+            fi
         fi
     done
 }
