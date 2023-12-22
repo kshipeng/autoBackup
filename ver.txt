@@ -1,2 +1,2 @@
-ver=2.0.2
+ver=2.0.3
 infor=添加清理Git提交记录方法，防止git目录越来越大。具体配置请前往GitHub查看。项目地址：https://github.com/kshipeng/autoBackup
