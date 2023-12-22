@@ -333,7 +333,6 @@ delete_old_files() {
     for file in "$directory"/*; do
         # 检查文件名是否以指定后缀结尾
         if [[ "$file" =~ \.(F\.tar\.gz|F\.des3|D\.sql\.tar\.gz|D\.sql\.des3)$ ]]; then
-            echo "$file"
             # 提取文件名中的时间部分
             local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
             # 将时间转换为时间戳
