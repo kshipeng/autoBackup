@@ -88,7 +88,7 @@ conf'"$1"'=(
 }
 
 shellURL='https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh'
-version='2.0.3'
+version='2.0.4'
 paramFromConf=true
 fullfile="$(pwd)/$(basename "$0")"
 fullname="${fullfile##*/}"
@@ -324,7 +324,7 @@ SendNotify(){
 }
 
 delete_old_files() {
-    # 接受两个参数：目录路径和时间差（单位分钟）
+    # 接受4个参数：目录路径、时间差（单位分钟）、当前时间戳、类型
     local directory="$1"
     local time_difference="$2"
     # 当前时间戳
@@ -332,7 +332,7 @@ delete_old_files() {
     # 遍历目录中的文件
     for file in "$directory"/*; do
         # 检查文件名是否以指定后缀结尾
-        if [[ "$file" =~ \.(F\.tar\.gz|F\.des3|D\.sql\.tar\.gz|D\.sql\.des3)$ ]]; then
+        if [[ "$file" =~ $4$ ]]; then
             # 提取文件名中的时间部分
             local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
             # 将时间转换为时间戳
@@ -404,7 +404,7 @@ RunFileBackup(){
     #删除过期文件
     ColorStr ">>>【清理过期文件】" green
     file_exp_time="$(GetParam "${exp_time}" '1')"
-    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp"
+    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp" ".${file_extension1}|.${file_extension2}"
 
 #    find "${gitPath}" -name "*.${file_extension1}" -mmin "+${file_exp_time}"
 #    find "${gitPath}" -name "*.${file_extension2}" -mmin "+${file_exp_time}"
@@ -435,7 +435,7 @@ RunDBBackup(){
 
     if [ -z "$db_user" -o -z "$db_name" -o -z "$git_user_name" -o -z "$git_user_email" -o -z "$git_url" ]; then
         ColorStr "请先使用：$(ColorStr "./${fullname} -c" green)命令进行配置" red
-        notifyMsg="${notifyMsg}🔴数据库 备份失败:参数未配置\n"
+        notifyMsg="${notifyMsg}🔴数据库  备份失败:参数未配置\n"
         return 1
     fi
     ColorStr ">>>开始$1: $(GetConfig 'read' $1 'remark') , 数据库备份" pink
@@ -453,9 +453,9 @@ RunDBBackup(){
     fi
     
     [ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$dbBackupGit"
-    [ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库 备份失败:(${gitPath})不存在(git clone失败)\n" && return 1
+    [ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴数据库  备份失败:(${gitPath})不存在(git clone失败)\n" && return 1
     mysqlStatus=`mysqladmin -u "${db_user}" -p"${db_passwd}" -h "${db_host}" -P "${db_port}" ping`
-    [[ "$mysqlStatus" != 'mysqld is alive' ]] && notifyMsg="${notifyMsg}🔴数据库 备份失败:无法连接数据库\n" && return 1
+    [[ "$mysqlStatus" != 'mysqld is alive' ]] && notifyMsg="${notifyMsg}🔴数据库  备份失败:无法连接数据库\n" && return 1
     ColorStr "GitHub仓库路径:${gitPath}" pink
     cd "${gitPath}"
     IFS_OLD=$IFS; IFS=$'|'; dbNameArray=(${db_name}); IFS=${IFS_OLD};
@@ -485,7 +485,7 @@ RunDBBackup(){
     #删除过期文件
     ColorStr ">>>【清理过期文件】" green
     file_exp_time="$(GetParam "${exp_time}" '2')"
-    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp"
+    delete_old_files "${gitPath}" "$file_exp_time" "$currentTimestamp" ".D.sql.tar.gz|.D.sql.des3"
 #    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}"
 #    find "${gitPath}" -name "*.D.sql.des3" -mmin "+${file_exp_time}"
 #    find "${gitPath}" -name "*.D.sql.tar.gz" -mmin "+${file_exp_time}" -exec rm -rf {} \;
@@ -501,12 +501,12 @@ RunDBBackup(){
           ColorStr ">>>【开始推送到GitHub】..." green
           git push
      else
-         notifyMsg="${notifyMsg}🟡数据库 备份:git没有变更的数据\n" && return
+         notifyMsg="${notifyMsg}🟡数据库   备份:git没有变更的数据\n" && return
     fi
     if [[ -z `git status -s` ]]; then
-          notifyMsg="${notifyMsg}🟢数据库 备份成功\n"
+        notifyMsg="${notifyMsg}🟢数据库   备份成功\n"
      else
-         notifyMsg="${notifyMsg}🔴数据库 备份失败:git push失败\n"
+        notifyMsg="${notifyMsg}🔴数据库  备份失败:git push失败\n"
     fi
 }
 
@@ -549,6 +549,8 @@ ResetGit() {
         ColorStr ">>>【当前分支: ${current_branch}】" yellow
         # 检查是否存在当前分支
         if [ -n "$current_branch" ]; then
+            git config user.name "${git_user_name}"
+            git config user.email "${git_user_email}"
             # 切换到其他分支，以便删除当前分支
             git checkout --orphan AutoBackupClear # 你可以替换成其他分支名
             git commit -m "自动备份并清理"
@@ -562,7 +564,7 @@ ResetGit() {
             rm -rf "${gitPath}"
             [ ! -d "${gitPath}" ] && cd "${fileDir}" && git clone "$backupGit";
             [ ! -d "${gitPath}" ] && notifyMsg="${notifyMsg}🔴$2 ClearGit出错：clone出错\n" && return 1
-            notifyMsg="${notifyMsg}🟢$2 清理完成。\n"
+            notifyMsg="${notifyMsg}🧹$2 清理完成。\n"
         else
             ColorStr "🔴$2 ClearGit出错：无法确定当前分支。" red
             notifyMsg="${notifyMsg}🔴$2 ClearGit出错：无法确定当前分支。\n"
@@ -576,27 +578,31 @@ ClearGit() {
         exit 1
     fi
     if [[ $2 != 'y' ]]; then
-        echo -n $(ColorStr '清理Git会删除当前分支的提交记录，确定继续吗?(y/n)' yellow); yellow answer;
-        if [[ $answer != 'y' ]];then
-            exit 0
-        fi
+        return 1
     fi
-    
+#    if [[ $2 != 'y' ]]; then
+#        echo -n $(ColorStr '清理Git会删除当前分支的提交记录，确定继续吗?(y/n)' yellow); yellow answer;
+#        if [[ $answer != 'y' ]];then
+#            exit 0
+#        fi
+#    fi
     backup_type=$(GetConfig 'read' $1 'backup_type')
     git_url=$(GetConfig 'read' $1 'git_url')
     backupGit="$(GetParam "${git_url}" 1)"
-    if [[ $backup_type = 3 ]]; then
+    if [[ $backup_type = 3 ]] && [[ $3 = 3 ]]; then
         backupGit1="$(GetParam "${git_url}" 1)"
         backupGit2="$(GetParam "${git_url}" 2)"
-        if [[ "$backupGit1" == "$backupGit2" ]]; then
-            ResetGit $backupGit1 '目录文件和数据库'
-        else
-            ResetGit $backupGit1 '目录文件'
-            ResetGit $backupGit2 '数据库'
-        fi
+        ResetGit $backupGit1 '目录文件'
+        ResetGit $backupGit2 '数据库  '
     else
-        backupGit="$(GetParam "${git_url}" $backup_type)"
-        ResetGit $backupGit '目录文件'
+        backupGit="$(GetParam "${git_url}" $3)"
+        if [[ $3 = 1 ]]; then
+            ResetGit $backupGit '目录文件'
+        elif [[ $3 = 2 ]]; then
+            ResetGit $backupGit '数据库  '
+        else
+            return 0
+        fi
     fi
 }
 
@@ -632,17 +638,22 @@ Run(){
         
         if [[ $backup_type = 1 || $backup_type = 3 ]] && [[ $1 = 1 ]]; then
             RunFileBackup "${sub_conf}"
+            sub_clear_git=$(GetParam "${clear_git}" 1)
+            ClearGit "${sub_conf}" "$sub_clear_git" 1
         elif [[ $backup_type = 2 || $backup_type = 3 ]] && [[ $1 = 2 ]] ; then
             RunDBBackup "${sub_conf}"
+            sub_clear_git=$(GetParam "${clear_git}" 2)
+            ClearGit "${sub_conf}" "$sub_clear_git" 2
         elif [[ $backup_type = 3 && $1 = 3 ]]; then
             RunFileBackup "${sub_conf}"
             RunDBBackup "${sub_conf}"
+            sub_clear_git=$(GetParam "${clear_git}" 1)
+            ClearGit "${sub_conf}" "$sub_clear_git" 1
+            sub_clear_git=$(GetParam "${clear_git}" 2)
+            ClearGit "${sub_conf}" "$sub_clear_git" 2
         else
             ColorStr '错误的命令或备份类型' red
             notifyMsg="${notifyMsg}错误的命令或备份类型\n"
-        fi
-        if [[ $clear_git = 'y' ]]; then
-            ClearGit "${sub_conf}" 'y'
         fi
     done
     if [[ "${notifyMsg}" != '' ]]; then
