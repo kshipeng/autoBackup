@@ -88,7 +88,7 @@ conf'"$1"'=(
 }
 
 shellURL='https://raw.githubusercontent.com/kshipeng/autoBackup/main/autoBackupV2.sh'
-version='2.0.4'
+version='2.0.5'
 paramFromConf=true
 fullfile="$(pwd)/$(basename "$0")"
 fullname="${fullfile##*/}"
@@ -636,25 +636,36 @@ Run(){
 
         notifyMsg="${notifyMsg}\n 🔔【${sub_conf}: ${remark}】\n"
         
-        if [[ $backup_type = 1 || $backup_type = 3 ]] && [[ $1 = 1 ]]; then
+        if [[ $backup_type = 1 ]]; then
             RunFileBackup "${sub_conf}"
             sub_clear_git=$(GetParam "${clear_git}" 1)
             ClearGit "${sub_conf}" "$sub_clear_git" 1
-        elif [[ $backup_type = 2 || $backup_type = 3 ]] && [[ $1 = 2 ]] ; then
+        elif [[ $backup_type = 2 ]]; then
             RunDBBackup "${sub_conf}"
             sub_clear_git=$(GetParam "${clear_git}" 2)
             ClearGit "${sub_conf}" "$sub_clear_git" 2
-        elif [[ $backup_type = 3 && $1 = 3 ]]; then
-            RunFileBackup "${sub_conf}"
-            RunDBBackup "${sub_conf}"
-            sub_clear_git=$(GetParam "${clear_git}" 1)
-            ClearGit "${sub_conf}" "$sub_clear_git" 1
-            sub_clear_git=$(GetParam "${clear_git}" 2)
-            ClearGit "${sub_conf}" "$sub_clear_git" 2
+        elif [[ $backup_type = 3 ]]; then
+            if [[ $1 = 1 ]]; then
+                RunFileBackup "${sub_conf}"
+                sub_clear_git=$(GetParam "${clear_git}" 1)
+                ClearGit "${sub_conf}" "$sub_clear_git" 1
+            elif [[ $1 = 2 ]]; then
+                RunDBBackup "${sub_conf}"
+                sub_clear_git=$(GetParam "${clear_git}" 2)
+                ClearGit "${sub_conf}" "$sub_clear_git" 2
+            else
+                RunFileBackup "${sub_conf}"
+                RunDBBackup "${sub_conf}"
+                sub_clear_git=$(GetParam "${clear_git}" 1)
+                ClearGit "${sub_conf}" "$sub_clear_git" 1
+                sub_clear_git=$(GetParam "${clear_git}" 2)
+                ClearGit "${sub_conf}" "$sub_clear_git" 2
+            fi
         else
             ColorStr '错误的命令或备份类型' red
             notifyMsg="${notifyMsg}错误的命令或备份类型\n"
         fi
+        
     done
     if [[ "${notifyMsg}" != '' ]]; then
         echo -e "${notifyMsg}\n${updateMsg}"
