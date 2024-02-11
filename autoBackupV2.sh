@@ -334,7 +334,7 @@ delete_old_files() {
         # 检查文件名是否以指定后缀结尾
         if [[ "$file" =~ $4$ ]]; then
             # 提取文件名中的时间部分
-            local timestamp=$(echo "$file" | awk 'match($0, /[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/) {print substr($0, RSTART, RLENGTH)}' | tr '_' ' ')
+            local timestamp=$(echo "$file" | sed -n 's/.*\(\([0-9]\{4\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\)_\([0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\)\).*/\2\3\4 \5/p')
             # 将时间转换为时间戳
             local file_time=$(date -d "$timestamp" +%s)
             # 计算时间差（以秒为单位）
